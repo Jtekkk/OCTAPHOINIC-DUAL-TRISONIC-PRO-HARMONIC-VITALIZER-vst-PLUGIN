@@ -34,8 +34,10 @@ jobs:
   # (MSVC on Windows, clang on macOS, gcc on Linux). Produces uploadable artifacts.
   #
   # JUCE is pre-cloned and consumed via add_subdirectory (JUCE_PATH) rather than
-  # FetchContent: the FetchContent git subbuild is flaky under the Visual Studio
-  # generator (MSB8066), and add_subdirectory is the well-trodden JUCE path.
+  # FetchContent. On Windows we use the Ninja generator with the MSVC environment
+  # (msvc-dev-cmd): the Visual Studio generator spawns nested MSBuild projects for
+  # JUCE's juceaide/vst3_helper that fail intermittently on the hosted image
+  # (MSB8066 / TryCompile C1083). Ninja keeps everything in one toolchain env.
   # ---------------------------------------------------------------------------
   plugin:
     needs: dsp-tests
@@ -61,11 +63,20 @@ jobs:
             libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev \
             libxcomposite-dev libxrender-dev libglu1-mesa-dev mesa-common-dev
 
+      - name: Set up MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
       - name: Fetch JUCE ${{ env.JUCE_TAG }}
         shell: bash
         run: git clone --depth 1 --branch "$JUCE_TAG" https://github.com/juce-framework/JUCE.git "${{ runner.temp }}/JUCE"
 
-      - name: Configure
+      - name: Configure (Windows / Ninja)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DJUCE_PATH=${{ runner.temp }}/JUCE"
+
+      - name: Configure (Unix)
+        if: runner.os != 'Windows'
         run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DJUCE_PATH=${{ runner.temp }}/JUCE"
 
       - name: Build
