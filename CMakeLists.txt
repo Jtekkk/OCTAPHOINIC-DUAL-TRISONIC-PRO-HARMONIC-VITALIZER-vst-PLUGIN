@@ -67,6 +67,16 @@ if(OCTA_BUILD_PLUGIN)
         list(APPEND OCTA_FORMATS AU)
     endif()
 
+    # JUCE generates the VST3 moduleinfo.json with a nested "vst3_helper" build.
+    # That nested build is unreliable on some hosted Windows CI images (preview
+    # MSVC toolchains), so skip the auto-manifest there. The VST3 is fully
+    # functional without the precomputed manifest; hosts introspect at load.
+    if(WIN32)
+        set(OCTA_VST3_MANIFEST FALSE)
+    else()
+        set(OCTA_VST3_MANIFEST TRUE)
+    endif()
+
     juce_add_plugin(OctaphonicVitalizer
         PLUGIN_MANUFACTURER_CODE Octa
         PLUGIN_CODE Ovtz
@@ -79,6 +89,7 @@ if(OCTA_BUILD_PLUGIN)
         NEEDS_MIDI_OUTPUT FALSE
         IS_MIDI_EFFECT FALSE
         COPY_PLUGIN_AFTER_BUILD FALSE
+        VST3_AUTO_MANIFEST ${OCTA_VST3_MANIFEST}
         VST3_CATEGORIES Fx
         AU_MAIN_TYPE kAudioUnitType_Effect)
 
