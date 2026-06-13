@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+#include "MathConstants.h"
 
 namespace octa
 {
@@ -20,7 +21,7 @@ public:
     {
         // R places the pole near z = 1; derived from the bilinear approximation
         // of a one-pole high-pass corner frequency.
-        R = 1.0 - (2.0 * M_PI * fc / sampleRate);
+        R = 1.0 - (2.0 * octa::kPi * fc / sampleRate);
         if (R < 0.0)  R = 0.0;
         if (R > 0.9999) R = 0.9999;
         reset();

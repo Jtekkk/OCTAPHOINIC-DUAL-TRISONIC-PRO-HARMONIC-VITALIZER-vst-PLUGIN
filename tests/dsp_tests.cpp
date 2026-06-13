@@ -35,7 +35,7 @@ static std::vector<float> genSine (double freq, double sr, int N, double amp = 1
 {
     std::vector<float> x (static_cast<size_t> (N));
     for (int n = 0; n < N; ++n)
-        x[static_cast<size_t> (n)] = static_cast<float> (amp * std::sin (2.0 * M_PI * freq * n / sr + phase));
+        x[static_cast<size_t> (n)] = static_cast<float> (amp * std::sin (2.0 * octa::kPi * freq * n / sr + phase));
     return x;
 }
 

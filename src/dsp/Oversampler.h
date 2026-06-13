@@ -22,6 +22,7 @@
 
 #include <vector>
 #include <cmath>
+#include "MathConstants.h"
 #include <cstddef>
 #include <algorithm>
 
@@ -124,12 +125,12 @@ private:
             if (std::abs (m) < 1.0e-9)
                 sinc = 2.0 * fc;
             else
-                sinc = std::sin (2.0 * M_PI * fc * m) / (M_PI * m);
+                sinc = std::sin (2.0 * octa::kPi * fc * m) / (octa::kPi * m);
 
             // Blackman window
             const double w = 0.42
-                           - 0.5  * std::cos (2.0 * M_PI * n / M)
-                           + 0.08 * std::cos (4.0 * M_PI * n / M);
+                           - 0.5  * std::cos (2.0 * octa::kPi * n / M)
+                           + 0.08 * std::cos (4.0 * octa::kPi * n / M);
 
             const double h = sinc * w;
             proto[static_cast<size_t> (n)] = static_cast<float> (h);

@@ -1,0 +1,94 @@
+name: build
+
+on:
+  push:
+    branches: [ "**" ]
+    paths-ignore: [ "**.md", "LICENSE", ".gitignore" ]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  JUCE_TAG: "8.0.13"
+
+jobs:
+  # ---------------------------------------------------------------------------
+  # Fast lane: the framework-independent DSP core + tests on every platform.
+  # No JUCE, no network, runs in seconds. This is the correctness gate.
+  # ---------------------------------------------------------------------------
+  dsp-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure (DSP only)
+        run: cmake -S . -B build-test -DOCTA_BUILD_PLUGIN=OFF -DCMAKE_BUILD_TYPE=Release
+      - name: Build
+        run: cmake --build build-test --config Release -j
+      - name: Test
+        run: ctest --test-dir build-test -C Release --output-on-failure
+
+  # ---------------------------------------------------------------------------
+  # Full plugin: VST3 + Standalone (+ AU on macOS) with the native toolchain
+  # (MSVC on Windows, clang on macOS, gcc on Linux). Produces uploadable artifacts.
+  #
+  # JUCE is pre-cloned and consumed via add_subdirectory (JUCE_PATH) rather than
+  # FetchContent. On Windows we use the Ninja generator with the MSVC environment
+  # (msvc-dev-cmd): the Visual Studio generator spawns nested MSBuild projects for
+  # JUCE's juceaide/vst3_helper that fail intermittently on the hosted image
+  # (MSB8066 / TryCompile C1083). Ninja keeps everything in one toolchain env.
+  # ---------------------------------------------------------------------------
+  plugin:
+    needs: dsp-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            name: Windows-VST3
+          - os: macos-latest
+            name: macOS-VST3-AU
+          - os: ubuntu-latest
+            name: Linux-VST3
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Linux audio/GUI deps
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libasound2-dev libfreetype6-dev libfontconfig1-dev \
+            libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev \
+            libxcomposite-dev libxrender-dev libglu1-mesa-dev mesa-common-dev
+
+      - name: Set up MSVC environment (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Fetch JUCE ${{ env.JUCE_TAG }}
+        shell: bash
+        run: git clone --depth 1 --branch "$JUCE_TAG" https://github.com/juce-framework/JUCE.git "${{ runner.temp }}/JUCE"
+
+      - name: Configure (Windows / Ninja)
+        if: runner.os == 'Windows'
+        run: cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release "-DJUCE_PATH=${{ runner.temp }}/JUCE"
+
+      - name: Configure (Unix)
+        if: runner.os != 'Windows'
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DJUCE_PATH=${{ runner.temp }}/JUCE"
+
+      - name: Build
+        run: cmake --build build --config Release -j
+
+      - name: Upload plugin artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: OctaphonicVitalizer-${{ matrix.name }}
+          path: |
+            build/**/OctaphonicVitalizer_artefacts/**/VST3/**
+            build/**/OctaphonicVitalizer_artefacts/**/AU/**
+            build/**/OctaphonicVitalizer_artefacts/**/Standalone/**
+          if-no-files-found: warn
