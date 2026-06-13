@@ -6,6 +6,9 @@ on:
   pull_request:
   workflow_dispatch:
 
+env:
+  JUCE_TAG: "8.0.13"
+
 jobs:
   # ---------------------------------------------------------------------------
   # Fast lane: the framework-independent DSP core + tests on every platform.
@@ -29,6 +32,10 @@ jobs:
   # ---------------------------------------------------------------------------
   # Full plugin: VST3 + Standalone (+ AU on macOS) with the native toolchain
   # (MSVC on Windows, clang on macOS, gcc on Linux). Produces uploadable artifacts.
+  #
+  # JUCE is pre-cloned and consumed via add_subdirectory (JUCE_PATH) rather than
+  # FetchContent: the FetchContent git subbuild is flaky under the Visual Studio
+  # generator (MSB8066), and add_subdirectory is the well-trodden JUCE path.
   # ---------------------------------------------------------------------------
   plugin:
     needs: dsp-tests
@@ -54,8 +61,12 @@ jobs:
             libx11-dev libxext-dev libxinerama-dev libxrandr-dev libxcursor-dev \
             libxcomposite-dev libxrender-dev libglu1-mesa-dev mesa-common-dev
 
+      - name: Fetch JUCE ${{ env.JUCE_TAG }}
+        shell: bash
+        run: git clone --depth 1 --branch "$JUCE_TAG" https://github.com/juce-framework/JUCE.git "${{ runner.temp }}/JUCE"
+
       - name: Configure
-        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+        run: cmake -S . -B build -DCMAKE_BUILD_TYPE=Release "-DJUCE_PATH=${{ runner.temp }}/JUCE"
 
       - name: Build
         run: cmake --build build --config Release -j
