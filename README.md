@@ -118,10 +118,11 @@ cd build-test && ctest --output-on-failure
 
 Pushing the branch builds the plugin on **Windows (MSVC)**, **macOS** and
 **Linux** via [`.github/workflows/build.yml`](.github/workflows/build.yml) and
-uploads the `.vst3` / `.exe` artifacts. The DSP core + tests also cross-compile
-to a native Windows `.exe` from Linux with MinGW-w64. Full details — including
-why the JUCE plugin needs MSVC on Windows — are in
-[`docs/BUILD_WINDOWS.md`](docs/BUILD_WINDOWS.md).
+uploads the `.vst3` / `.exe` / `.component` artifacts — this is **verified
+green** (Windows VST3 + Standalone, macOS VST3 + AU, Linux VST3). The DSP core +
+tests additionally cross-compile to a native Windows `.exe` from Linux with
+MinGW-w64. Full details — including why the JUCE plugin needs MSVC on Windows —
+are in [`docs/BUILD_WINDOWS.md`](docs/BUILD_WINDOWS.md).
 
 ---
 

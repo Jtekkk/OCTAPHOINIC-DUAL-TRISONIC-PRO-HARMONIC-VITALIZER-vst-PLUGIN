@@ -8,18 +8,32 @@
 
 ---
 
-## A. GitHub Actions (MSVC) — recommended
+## A. GitHub Actions (MSVC) — recommended ✓ verified green
 
 The repo ships a CI workflow at [`.github/workflows/build.yml`](../.github/workflows/build.yml)
 that builds the plugin on **Windows (MSVC)**, macOS and Linux, runs the DSP
-tests, and uploads the artifacts.
+tests on all three, and uploads the artifacts. It is confirmed passing and
+produces three downloadable bundles:
 
-1. Push the branch (or open a PR). The `plugin` job builds `OctaphonicVitalizer`
-   on `windows-latest`.
-2. Download **`OctaphonicVitalizer-Windows-VST3`** from the run's *Artifacts*.
-   It contains `OCTAPHONIC Vitalizer.vst3` and the Standalone `.exe`.
+| Artifact                            | Contents                                   |
+|-------------------------------------|--------------------------------------------|
+| `OctaphonicVitalizer-Windows-VST3`  | `OCTAPHONIC Vitalizer.vst3` + Standalone `.exe` |
+| `OctaphonicVitalizer-macOS-VST3-AU` | `.vst3` + `.component` (AU)                 |
+| `OctaphonicVitalizer-Linux-VST3`    | `.vst3` + Standalone                        |
+
+To get the Windows plugin:
+
+1. Push the branch (already wired to `on: push`). Open the run under the repo's
+   **Actions** tab.
+2. Download **`OctaphonicVitalizer-Windows-VST3`** from the run's *Artifacts*
+   section (or `gh run download <run-id> -n OctaphonicVitalizer-Windows-VST3`).
 
 No local Windows machine required.
+
+> On Windows the build uses the **Ninja** generator with the MSVC environment
+> (`msvc-dev-cmd`) and skips JUCE's optional VST3 `moduleinfo.json` helper —
+> both work around fragilities of the hosted Windows image's preview toolchain.
+> The resulting `.vst3` is fully functional.
 
 ## B. Native MSVC on Windows
 
