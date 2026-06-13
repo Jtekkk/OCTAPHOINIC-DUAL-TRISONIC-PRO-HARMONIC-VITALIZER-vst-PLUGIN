@@ -8,6 +8,7 @@ project(OctaphonicVitalizer VERSION 1.0.0 LANGUAGES C CXX)
 # ---------------------------------------------------------------------------
 option(OCTA_BUILD_PLUGIN "Build the JUCE VST3/AU/Standalone plugin (fetches JUCE)" ON)
 option(OCTA_BUILD_TESTS  "Build the framework-independent DSP unit tests"          ON)
+option(OCTA_USE_SYSTEM_JUCE "Use an installed JUCE (find_package) instead of fetching" OFF)
 set(OCTA_JUCE_TAG "8.0.13" CACHE STRING "JUCE git tag to fetch when building the plugin")
 set(JUCE_PATH "" CACHE PATH "Path to a local JUCE checkout (skips the network fetch)")
 
@@ -38,13 +39,22 @@ endif()
 #  Plugin (JUCE)
 # ---------------------------------------------------------------------------
 if(OCTA_BUILD_PLUGIN)
-    include(FetchContent)
-
+    # When cross-compiling, JUCE's juceaide helper must run on the build host, so
+    # use a JUCE that was installed natively (find_package) rather than building
+    # it for the target. See docs/BUILD_WINDOWS.md.
+    # Note on cross-compiling: JUCE automatically builds its `juceaide` helper
+    # for the *host* (via a recursive CMake call) when added with
+    # add_subdirectory/FetchContent, so the normal paths below work for MinGW
+    # cross-builds too. find_package is only used when explicitly requested.
     if(JUCE_PATH)
         message(STATUS "Using local JUCE at ${JUCE_PATH}")
         add_subdirectory(${JUCE_PATH} ${CMAKE_BINARY_DIR}/JUCE)
+    elseif(OCTA_USE_SYSTEM_JUCE)
+        message(STATUS "Using installed JUCE via find_package")
+        find_package(JUCE CONFIG REQUIRED)
     else()
         message(STATUS "Fetching JUCE ${OCTA_JUCE_TAG} ...")
+        include(FetchContent)
         FetchContent_Declare(JUCE
             GIT_REPOSITORY https://github.com/juce-framework/JUCE.git
             GIT_TAG ${OCTA_JUCE_TAG}

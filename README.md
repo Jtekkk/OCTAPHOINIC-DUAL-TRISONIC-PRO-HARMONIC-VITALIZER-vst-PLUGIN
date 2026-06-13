@@ -112,6 +112,16 @@ cd build-test && ctest --output-on-failure
 | `OCTA_BUILD_TESTS`     | `ON`      | Build the framework-independent DSP tests            |
 | `OCTA_JUCE_TAG`        | `8.0.13`  | JUCE git tag to fetch                                |
 | `JUCE_PATH`            | *(unset)* | Use a local JUCE checkout instead of fetching        |
+| `OCTA_USE_SYSTEM_JUCE` | `OFF`     | Use an installed JUCE (`find_package`) vs. fetching  |
+
+### Windows / macOS / CI
+
+Pushing the branch builds the plugin on **Windows (MSVC)**, **macOS** and
+**Linux** via [`.github/workflows/build.yml`](.github/workflows/build.yml) and
+uploads the `.vst3` / `.exe` artifacts. The DSP core + tests also cross-compile
+to a native Windows `.exe` from Linux with MinGW-w64. Full details — including
+why the JUCE plugin needs MSVC on Windows — are in
+[`docs/BUILD_WINDOWS.md`](docs/BUILD_WINDOWS.md).
 
 ---
 

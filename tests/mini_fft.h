@@ -15,6 +15,8 @@
 namespace mfft
 {
 
+inline constexpr double kPi = 3.14159265358979323846;
+
 using cd = std::complex<double>;
 
 // In-place iterative Cooley-Tukey FFT. a.size() must be a power of two.
@@ -32,7 +34,7 @@ inline void fft (std::vector<cd>& a, bool invert)
 
     for (int len = 2; len <= n; len <<= 1)
     {
-        const double ang = 2.0 * M_PI / len * (invert ? 1.0 : -1.0);
+        const double ang = 2.0 * kPi / len * (invert ? 1.0 : -1.0);
         const cd wlen (std::cos (ang), std::sin (ang));
         for (int i = 0; i < n; i += len)
         {

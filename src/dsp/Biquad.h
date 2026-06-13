@@ -8,6 +8,7 @@
 #pragma once
 
 #include <cmath>
+#include "MathConstants.h"
 
 namespace octa
 {
@@ -106,7 +107,7 @@ private:
         // Clamp to a sane range so we never evaluate at or past Nyquist.
         if (freqHz < 1.0)                 freqHz = 1.0;
         if (freqHz > 0.49 * sampleRate)   freqHz = 0.49 * sampleRate;
-        return 2.0 * M_PI * freqHz / sampleRate;
+        return 2.0 * octa::kPi * freqHz / sampleRate;
     }
 
     void normalise (double cb0, double cb1, double cb2,
